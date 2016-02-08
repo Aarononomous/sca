@@ -1,0 +1,16 @@
+(title "Life")
+
+(description "John Conway's 1970 Game of Life.
+Rules are:
+For a live cell: If it has fewer than 2 neighbors, it dies of under-population.
+      	     	   If it has more than 3 neighbors, it dies of over-population.
+		   Otherwise, it remains alive.
+For an dead cell: If it has 3 neighbors, it becomes alive."
+
+(state '⬛ (neighbor< '⬛️2) 'empty)
+(state '⬛ (neighbor> '⬛️3) 'empty)
+(state 'empty (neighbor=  '⬛ 3) '⬛)
+
+(world :dimensions (25 40)
+       :proportions (('⬛ 0.5)
+       		     ('empty 0.5)))
