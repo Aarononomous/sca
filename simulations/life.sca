@@ -7,10 +7,10 @@ For a live cell: If it has fewer than 2 neighbors, it dies of under-population.
 		   Otherwise, it remains alive.
 For an dead cell: If it has 3 neighbors, it becomes alive."
 
-(TRANS '⬛    (NEIGHBOR< '⬛️2) 'empty)
-(TRANS '⬛    (NEIGHBOR> '⬛️3) 'empty)
-(TRANS 'empty (NEIGHBOR=  '⬛ 3) '⬛)
+(trans '⬛    (neighbor< '⬛️ 2) 'empty)
+(trans '⬛    (neighbor> '⬛ 3) 'empty)
+(trans 'empty (neighbor=  '⬛ 3) '⬛)
 ;;; If a cell doesn't fall into one of these categories, it remains the same.
 
 ;;; Set the proportions; the rest of the parameters are defaults
-(WORLD :START-PROPORTIONS (('⬛ 0.5)))
+(world :start-proportions (('⬛ 0.5)))

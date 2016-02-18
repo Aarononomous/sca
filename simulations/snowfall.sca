@@ -1,0 +1,27 @@
+(title "Snowfall")
+
+(description "Snow falls gently onto the ground.
+It melts, forming puddles.
+Puddles slowly dissipate in vapor.")
+
+;;; The world starts out unmarked
+(world :start-proportions (('empty 1))) ; this is the default, as well
+
+;;; The transition table is ordered by event
+
+;;; Snow falls all across the world
+(trans 'empty (* turns-into 0.01) '❄)
+(trans '💦     (* turns-into 0.01) '❄)
+(trans '💧     (* turns-into 0.01) '❄)
+
+;;; It melts...
+(trans '❄ (* (neighbor>= '❄ 2) 0.1)  '💦)
+(trans '❄ (* (neighbor<  '❄ 2) 0.25) '💦)
+
+;;; Puddles thin...
+(trans '💦 (* (neighbor '💦) 0.25) '💧)
+(trans '💦 (* (neighbor '💧) 0.25) '💧)
+
+;;; ...then evaporate
+(trans '💧 (* (neighbor '💦) 0)    'empty)
+(trans '💧 (* (neighbor '💧) 0.25) 'empty)
