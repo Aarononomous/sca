@@ -11,6 +11,7 @@
 
 (load "./packages.lisp")
 (load "./screen.lisp")
+(load "./simulation.lisp")
 
 (defun check-keyboard-interrupt ()
   "Break out of the loop, temporarily or permanently."
@@ -18,7 +19,7 @@
   (let ((key (cl-charm:get-char)))
     (cond
       ((eq key #\P) (pause-simulation))
-      ((eq key #\[) (pause-simulation))
+      ((eq key #\[) (pause-simulation)) ;; TODO: escape key
       ((eq key #\L) (load-simulation))
       ((eq key #\S) (save-screenshot))
       ((eq key #\X) (exit-program))))
