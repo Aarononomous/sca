@@ -2,143 +2,190 @@
 
 ## Overview
 
-We can create and model sophisticated models of worlds with a very simple mechanism: within the world (described as a grid of cells), the state of each cell is updated based solely upon its current state and the states of its neighbors.
+> We may regard the present state of the universe as the effect of its past and the cause of its future.  
+	&mdash; Pierre-Simon Laplace, *Essai philosophique sur les probabilités*, 1814
 
-This model is called __cellular automata__. A notable example of this is the Game of Life, invented by John Conway in 1970. From only four rules, powerful and surprising behavior emerges. Even without direct interaction between entities, group organization seems to be present.
+We can create and explore sophisticated models of the world with one simple mechanism: within the model, a grid of cells, updated at discrete intervals, the future state of each cell is determined solely by its current state and the current states of its neighbors.
 
-By introducing randomness to the state changes (the “stochastic” in “stochastic cellular automata”), even simpler models can display extremely complex behavior.
+This model is called __cellular automata__. A noteworthy example of this is the Game of Life, invented by John Conway in 1970. From only four rules, powerful and surprising behavior emerges. Even without direct interaction between entities, group organization seems to be present.
 
-This project develops
+The world is haphazard, and by introducing randomness to the state transitions (the “stochastic” part of “stochastic cellular automata”), we add additional subtlety and complexity to our simulations.
 
-1. a simulator to run these models in;
-2. a language for describing models and worlds; and
+
+This project consists of:
+
+1. a simulator for running and exploring these models;
+2. a language that describes models; and
 3. a bunch of fun models to play with.
 
 ## More
 
 A really wonderful explication of this can be seen (and played with) at [Simulating the World (in Emoji)](http://ncase.me/simulating), and I urge everybody to do so.
 
-To introduce stochastic cellular automata, let’s start by constructing a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population. We’ll create another model of this relation with a different mechanism, cellular automata. There are three states in the model: empty, wolf, and bunny. Let's devise transition rules for each of these states.
+To introduce stochastic cellular automata, let’s jump in and  construct a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population in two species of animals, predators and prey --- the cyclic nature develops from the delay between prey population and predation. It can be described with differential equations, but we’ll create another model of this relationship via a different mechanism, cellular automata. There are three states in the model: empty, wolf (🐺), and bunny (🐰).
 
-### Empty cells:
+Next, let's devise transition rules for each of these states.
 
-* if more than two neighbors are bunnies (50% of the time) ⟶ become a bunny; __reproduction__
-* if more than two neighbors are wolves (25% of the time) ⟶ become a wolf; __reproduction__
+__Empty cells:__
 
-### Bunny cells:
+* if more than two neighbors are bunnies (50% of the time) ⟶ become a bunny; __reproduction__  
+	`(trans 'empty (* (neighbor> 2 '🐰) 0.5) '🐰)`
+* if more than two neighbors are wolves (25% of the time) ⟶ become a wolf; __reproduction__  
+	`(trans 'empty (* (neighbor> 2 '🐺) 0.25) '🐺)`
 
-* if one neighbor is a wolf ⟶ become empty; __predation__
-* if more than one neighbor is a wolf ⟶ become a wolf; __predation and reproduction__
-* if more than three neighbors are bunnies ⟶ become empty; __overconsumption__
+__Bunny cells:__
 
-### Wolf cells:
+* if one neighbor is a wolf ⟶ become empty; __predation__  
+	`(trans '🐰 (neighbor= 1 '🐺) 'empty)`
+* if more than one neighbor is a wolf ⟶ become a wolf; __predation and reproduction__  
+	`(trans '🐰 (neighbor> 1 '🐺) '🐺)`
+* if more than three neighbors are bunnies ⟶ become empty; __overconsumption__  
+	`(trans '🐰 (neighbor> 3 '🐰) 'empty)`
 
-* if less than one of its neighbors is a bunny ⟶ become empty; __starvation__
+__Wolf cells:__
+
+* if less than one of its neighbors is a bunny ⟶ become empty; __starvation__  
+	`(trans '🐺 (neighbor< 1 '🐰) 'empty)`
 
 And that's it!
 
-We set up the "world" with a random assortment of cells and begin the simulation. After 10 or so generations, patterns begin to emerge. Small groups of wolves are formed, but soon surround themselves with empty cells by consuming all the bunnies in the region, leading to “packs” roving around the world leaving empty patches in their wakes, which are then re-filled with bunnies after another dozen generations. From a random state, as well, stable population proportions emerge, while epicyclic waves of population density come and go.
+Note that the automata cells are similar, but *not exactly* equivalent to agents. A better metaphor would be to think of them as locations displaying the plurality of their inhabitants.
+
+We then set up the "world" with randomly populated cells, say 1/3 bunny and 1/10 wolf, and begin the simulation. After ten or so generations, patterns begin emerging. Small groups of wolves congregate over five generations, deplete all the bunnies in the surrounding region, and then break off into  “packs” which rove across the world leaving wakes of cleared cells, which then repopulate with bunnies in another dozen generations. From the first random state, then, cyclic populations emerge, while epicyclic waves of population density come and go.
 
 ## Implementation
 
+### A Slow Start
+
+You'll need a few things not included in this repo to get started, unfortunately.
+
+* [SBCL](http://www.sbcl.org) is what I'm using, but any good Common Lisp should work.
+* [Quicklisp](https://www.quicklisp.org/) is a library manager for Lisp, used to install
+* [cl-charms](https://github.com/HiTECNOLOGYs/cl-charms), a curses screen manager. This will be installed automatically the first time the program's run, but Quicklisp has to be installed separately.
+
 ### The Simulator
 
-The terminal window is used as the display. With the exception of the activity bar which occupies its bottom line, the entire window displays the simulation. With each generation, all the cells within the model are updated and the world is redisplayed.
+The terminal window is used as the display. With the exception of an activity bar which occupies its bottom line, the entire terminal is occupied by the simulation. At every generation, all cells within the model are updated and the world is re-displayed.
 
-Controls are simple keystrokes, and a key is always displayed on the activity bar:
+Controls are simple: a list of available options is listed on the activity bar, and are activated by their key:
 
-__`[P]ause/Play`__: Does the obvious thing.
+__[P]ause/Play__: Does the obvious thing.
 
-__`[L]oad file`__: Pauses the simulation and prompts for a file.
+__[L]oad file__: Pauses the simulation and prompts for a simulation file.
    
-__`[S]creenshot`__: Pauses the simulation and prompts for a filename and location to save the screenshot to. Screenshots are simple text files.
+__[S]creenshot__: Pauses the simulation and prompts for a file into which the screenshot will be saved. Screenshot files are plaintext.
    
-__`e[X]it`__: Exits the program.
+__e[X]it__: Exits the program.
 
 ### The Model Description Language
 
 #### Quick Introduction
 
-Descriptions of agents are effectively lists of state transitions. For example, if a water cell becomes ice half the time it’s next to an ice cell, and becomes air 1/100 of the time it’s next to more than 3 air cells, the rules are written:
+Descriptions of models are essentially lists of state transitions. For example, if a water cell becomes an ice cell half the time it’s next to an ice cell and becomes an air cell 1/100 of the time it’s next to more than 3 air cells, the rules are written:
 
 ```
-(TRANS 'water (* (NEIGHBOR 'ice) 0.5)) 'ice)
-(TRANS 'water (* (NEIGHBOR> 'air 3) 0.01) 'air)
+(trans 'water (* (neighbor 'ice) 0.5)) 'ice)
+(trans 'water (* (neighbor> 'air 3) 0.01) 'air)
 ```
 
-The format of this is `(TRANS current-state transition-probability new-state)`. Additional parts of the agent description handle its representation, a text description, and so on.
+The format of this is `(trans current-state transition-probability new-state)`. Helper functions such as `neighbor` return __1__ or __0__ for true or false conditions, and can be easily integrated into a more complex function.
 
-`neighbor` is a helper function, part of a family of related functions that inspect the neighbors of a cell.
-A fractional probability isn’t required; for Life, e.g., the transitions would be:
-
-```
-(TRANS 'full  (NEIGHBOR< 'full 2) 'empty)
-(TRANS 'full  (NEIGHBOR> 'full 5) 'empty)
-(TRANS 'full  TURNS-INTO 'full) ;; this isn't necessary when the state doesn't change
-(TRANS 'empty (NEIGHBOR= full 3) 'full)
-(TRANS 'empty TURNS-INTO 'empty) ;; this is also unnecessary, but explicated
-```
-
-The description of the simulation is a list of attributes : its dimensions, the “neighborhood” of a cell (whether we include the diagonal neighbors or not), the starting state of the world, whether the world wraps around the edges of the grid, etc. For the predator-prey simulation from above:
+A fractional probability isn’t required, however; for Life, e.g., the transitions would be:
 
 ```
-(WORLD :HEIGHT 25
-       :WIDTH 40
-       :START-PROPORTIONS (('wolf 0.10) ('bunny 0.3333)))
+(trans 'full  (neighbor< 'full 2) 'empty)
+(trans 'full  (neighbor> 'full 5) 'empty)
+(trans 'full  turns-into 'full) ;; this isn't necessary when the state doesn't change
+(trans 'empty (neighbor= full 3) 'full)
+(trans 'empty turns-into 'empty) ;; this is also unnecessary, but added for explicitness
 ```
 
-#### More
-
-TODO: A full description and BNF notation
-
-
-Helper functions: TURNS-INTO  -> 1
-       		  NEIGHBOR   -> {0,1}
-		  NEIGHBOR=  -> {0,1}
-		  NEIGHBOR<  -> {0,1}
-		  NEIGHBOR>  -> {0,1}
-		  NEIGHBOR<= -> {0,1}
-		  NEIGHBOR>= -> {0,1}
-
-
-The BNF notation:
+The description of the simulation also contains its attributes: its dimensions, the “neighborhood” of a cell (whether diagonal neighbors are included or not), the starting state of the world, etc. For the predator-prey simulation above, we could have:
 
 ```
-config ::= title description state* world
-title ::= (TITLE <string>)
-description ::= (DESCRIPTION <string>)
-state ::= (STATE current-state cond new-state)
-current-state ::= state-symbol
-new-state ::= state-symbol
-state-symbol ::= <symbol>
-cond ::= [0,1] | (s-exp) | (s-exp ... [helper] ...) ;; a number between 0 and 1
-helper ::= neighbor-helper | TURNS-INTO
-neighbor-helper ::= (NEIGHBOR   state-symbol)   |
-        	    (NEIGHBOR=  state-symbol <number>) |
-		    (NEIGHBOR<  state-symbol <number>) |
-		    (NEIGHBOR>  state-symbol <number>) |
-		    (NEIGHBOR<= state-symbol <number>) |
-		    (NEIGHBOR>= state-symbol <number>)
-world ::= (WORLD start-properties start-configuration)
-start-properties ::= (&rest &optional dimensions proportions start-configuration)
-dimensions ::= :DIMENSIONS (height width)
-proportions ::= :PROPORTIONS ((cell1 [0,1]) (cell2 [0,1]) etc.)
-
-????
-'EMPTY
-start-configuration ::= :START-CONFIG <string>
+(world :height 25
+       :width 40
+       :start-proportions (('🐺 0.10) ('🐰 0.3333)))
 ```
+
+#### File Format
+
+Please use `.sca` as the extension. These are proper lisp files and can be matched to it for syntax highlighting in editors. Moreover, all the code will be run (or not, if there's an error!)
+
+#### A Full BNF Notation
+
+*config* ::= *title* *description* _trans*_ *world*  
+The config file contains a title, descriptive information about the simulation, a list of transitions, and configuration info for the "world."
+
+*title* ::= (title \<string\>)  
+*description* ::= (description \<string\>)  
+The title and description are just strings.
+
+##### Transitions
+
+*trans* ::= (trans *current-state* *transition-probability* *new-state*)  
+From *current-state*, turn into *new-state* with probability *transition-probability*.
+
+*current-state* ::= *state-symbol*  
+*new-state* ::= *state-symbol*  
+*state-symbol* ::= \<symbol\>  
+There is one special symbol, 'empty, which displays as a blank space. Otherwise the state is displayed as the first character of the state's name. Use emoji...
+
+*prob* ::= 0 | 1 | \<s-exp\> | \<s-exp using a helper function\>  
+*prob* must evaluate to a number between 0 and 1 inclusive.
+
+##### Helper Functions
+
+*helper* ::= *neighbor-helper* | turns-into  
+turns-into is a synonym for 1.
+
+*neighbor-helper* ::= (neighbor *state-symbol*) | (neighbor= *state-symbol* \<number\>) | (neighbor< *state-symbol* \<number\>) | (neighbor> *state-symbol* \<number\>) | (neighbor<= *state-symbol* \<number\>) |  (neighbor>= *state-symbol* \<number\>)  
+neighbor returns 0 or 1 based on at least one *state-symbol* located adjacent to the cell.  
+neighbor=, neighbor<, etc. return 0 or 1 based on having \<number\> of *state-symbol*'s located adjacent to the cell.
+
+##### Simulation Settings
+		      
+*world* ::= (world &rest &optional _start-properties*_ *start-configuration*)  
+This is not required.
+
+*start-properties* ::= *dimensions* | *proportions*
+*dimensions* ::= :dimensions (\<height\> \<width\>)  
+Defaults to ()screen-height - 1 screen-width).
+
+*proportions* ::= :proportions ((*state-symbol* *proportion*)*)  
+A list of states and their overall proportions. When the simulation is created, cells will be randomly assigned to these states. 'empty is allowed. *proportion* is a number between 0 and 1; the sum of all *proportion*'s should be no more than 1.  
+This defaults to all 'empty.
+
+*start-configuration* ::= :start-config \<string\>  
+A multi-line string.  
+
+#### Editors and Terminals
+
+Dealing with emoji (and more importantly, other non-ASCII-width characters) is not the strong suit of current fixed-pitched displays (cf. [Adventures in Emoji]()https://ianrenton.com/blog/adventures-in-emoji/), [When monospace fonts aren't](http://denisbider.blogspot.com/2015/09/when-monospace-fonts-arent-unicode.html)).
+
+If you want to use emoji in creating your models (and I recommend you do), it's best to use *only* emoji, or the display will be messed up.
+
+If emoji aren't displaying in your terminal:
+
+* If there's a setting for "Unicode East Asian characters...", make sure it's selected.
+* If you can choose a second font, add one with emoji characters.
+
+If emoji aren't displaying in Emacs:
+
+* add `(set-fontset-font t 'unicode "Apple Color Emoji" nil 'prepend)` to your .emacs file. An excellent alternate font is Symbola.
+
 
 ## Models
 
-TODO: Should these be actual files? Yes, right?
-      There should be three descriptions: files, examples, and links.
-
 ### Examples
 
-TODO
+Additional examples are included in the /simulations subdirectory.
 
-### Prose Descriptions of Models
+[Snowfall](./simulations/snowfall.sca) is a model of snow melting. It uses three states and nine transitions.
+
+[Life](./simulations/life.sca) is a version of Conway's Game of Life.
+
+### Other Models
 
 * The [Schelling Model of Segregation](http://nifty.stanford.edu/2014/mccown-schelling-model-segregation/)
 * Non-random Cellular Automata. There are some famous examples of this:
