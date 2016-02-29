@@ -1,0 +1,29 @@
+(title "Stoplights 🚦")
+
+(description "Green to yellow to red to green to yellow to.... A teeny tiny simulation to test the modeling code in an obvious way; \"obvious ")
+
+;;; Note that I'm using a broken heart here. The unbroken red heart is
+;;; a 6-byte character and the others are 4-byte chars....
+
+(states '((R . "💔")
+	  (Y . "💛")
+	  (G . "💚")))
+
+;;; The world is very small and very full of stoplights
+
+(world :dimensions '(9 9)
+       :start-configuration #2A((R R R R R R R R R)
+                                (R Y Y Y Y Y Y Y R)
+                                (R Y G G G G G Y R)
+                                (R Y G R R R G Y R)
+                                (R Y G R Y R G Y R)
+                                (R Y G R R R G Y R)
+                                (R Y G G G G G Y R)
+                                (R Y Y Y Y Y Y Y R)
+                                (R R R R R R R R R)))
+
+;;; There are only three rules
+
+(trans 'G #'turns-into 'Y)
+(trans 'Y #'turns-into 'R)
+(trans 'R #'turns-into 'G)

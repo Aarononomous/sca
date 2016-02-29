@@ -29,23 +29,23 @@ Next, let's devise transition rules for each of these states.
 __Empty cells:__
 
 * if more than two neighbors are bunnies (50% of the time) ⟶ become a bunny; __reproduction__  
-	`(trans 'empty (* (neighbor> 2 '🐰) 0.5) '🐰)`
+	`(trans 'empty (* (neighbor> 2 'bunny) 0.5) 'bunny)`
 * if more than two neighbors are wolves (25% of the time) ⟶ become a wolf; __reproduction__  
-	`(trans 'empty (* (neighbor> 2 '🐺) 0.25) '🐺)`
+	`(trans 'empty (* (neighbor> 2 'wolf) 0.25) 'wolf)`
 
 __Bunny cells:__
 
 * if one neighbor is a wolf ⟶ become empty; __predation__  
-	`(trans '🐰 (neighbor= 1 '🐺) 'empty)`
+	`(trans 'bunny (neighbor= 1 'wolf) 'empty)`
 * if more than one neighbor is a wolf ⟶ become a wolf; __predation and reproduction__  
-	`(trans '🐰 (neighbor> 1 '🐺) '🐺)`
+	`(trans 'bunny (neighbor> 1 'wolf) 'wolf)`
 * if more than three neighbors are bunnies ⟶ become empty; __overconsumption__  
-	`(trans '🐰 (neighbor> 3 '🐰) 'empty)`
+	`(trans 'bunny (neighbor> 3 'bunny) 'empty)`
 
 __Wolf cells:__
 
 * if less than one of its neighbors is a bunny ⟶ become empty; __starvation__  
-	`(trans '🐺 (neighbor< 1 '🐰) 'empty)`
+	`(trans 'wolf (neighbor< 1 'bunny) 'empty)`
 
 And that's it!
 
@@ -105,7 +105,14 @@ The description of the simulation also contains its attributes: its dimensions, 
 ```
 (world :height 25
        :width 40
-       :start-proportions (('🐺 0.10) ('🐰 0.3333)))
+       :start-proportions (('wolf 0.10) ('bunny 0.3333)))
+```
+
+There are also descriptions of the states in this file, that determine how they'll be displayed. For the same simulation:
+
+```
+(states '((wolf .  "🐺")
+          (bunny . "🐰")))
 ```
 
 #### File Format
@@ -148,9 +155,16 @@ neighbor=, neighbor<, etc. return 0 or 1 based on having \<number\> of *state-sy
 *world* ::= (world &rest &optional _start-properties*_ *start-configuration*)  
 This is not required.
 
+*states* ::= (states *state-symbols-a-list*)  
+An association list of the states and the symbols which are displayed for them.
+
+*state-symbols-a-list* ::= '(_state-symbol_*)  
+*state-symbol* ::= '(\<symbol\> . \<char\>)  
+\<Symbol\> is a regular Lisp symbol. \<char\> is a single character *string*. Yes, string.
+
 *start-properties* ::= *dimensions* | *proportions*
 *dimensions* ::= :dimensions (\<height\> \<width\>)  
-Defaults to ()screen-height - 1 screen-width).
+Defaults to (screen-height - 1 x screen-width).
 
 *proportions* ::= :proportions ((*state-symbol* *proportion*)*)  
 A list of states and their overall proportions. When the simulation is created, cells will be randomly assigned to these states. 'empty is allowed. *proportion* is a number between 0 and 1; the sum of all *proportion*'s should be no more than 1.  
@@ -174,12 +188,11 @@ If emoji aren't displaying in Emacs:
 
 * add `(set-fontset-font t 'unicode "Apple Color Emoji" nil 'prepend)` to your .emacs file. An excellent alternate font is Symbola.
 
-
 ## Models
 
-### Examples
-
 Additional examples are included in the /simulations subdirectory.
+
+[Stoplights 🚦](./simulations/stoplights.sca) blinks as its cells switch between red, yellow, and green.
 
 [Snowfall](./simulations/snowfall.sca) is a model of snow melting. It uses three states and nine transitions.
 
