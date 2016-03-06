@@ -1,0 +1,34 @@
+(title "Tiny Town 🌆")
+
+(description "An itty-bitty simulation to test the neighbor* helper functions.")
+
+(states '((S . "➕") ; the street
+	  (A . "🏠") ; a single house
+	  (B . "🏡") ; a house with garden
+	  (C . "🏢") ; an apartment building
+	  (D . "🏰") ; a castle
+	  (E . "🏯") ; a larger castle
+	  (F . "🌃"))) ; an entire city
+
+(trans 'A #'(lambda () (neighbor   'A)) 'B) ;; keep up with the Joneses
+(trans 'B #'(lambda () (neighbor=  'B 4)) 'A) ;; no sunlight for the garden :(
+(trans 'C #'(lambda () (neighbor<  'C 3)) 'S) ;; urban blight
+(trans 'D #'(lambda () (neighbor>  'D 1)) 'E) ;; keep up with the King Joneses
+(trans 'E #'(lambda () (neighbor<= 'S 5)) 'F) ;; the castle keep becomes the city walls
+(trans 'F #'(lambda () (neighbor>= 'B 3)) 'C) ;; not really a city
+
+(world :start-configuration #2A((A A S S S S)
+				(S S B S A S)
+				(S B B B C C)
+				(S F B D C S)
+				(S S S D D S)
+				(S S E S S S)
+				(S S E S S E)))
+
+;; These should all be true -- they're tested when the simulation is loaded
+(eq (next-state 0 1) 'B)
+(eq (next-state 2 2) 'A)
+(eq (next-state 2 4) 'S)
+(eq (next-state 4 3) 'E)
+(eq (next-state 6 5) 'F)
+(eq (next-state 3 1) 'C)

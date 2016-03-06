@@ -8,32 +8,34 @@
 
 (description "every two generations, spatters the world with random animals.")
 
-(states '((empty-a . " ")
-	  (empty-b . " ")
+(states '((empty   . "  ")
+	  (empty-b . "  ")
+	  (c . "🐮")
 	  (h . "🐹")
 	  (k . "🐨")	  
 	  (m . "🐵")
-	  (p . "🐼")
-	  (t . "🐯")))
+	  (p . "🐼")))
 
 ;;; the world starts out empty
 
 (world :dimensions '(10 10))
 
 ;;; all non-empty states become empty in the next generation
-(trans 'empty-b #'turns-into 'empty-a)
-(trans 'h #'turns-into 'empty-a)
-(trans 'k #'turns-into 'empty-a)
-(trans 'm #'turns-into 'empty-a)
-(trans 'p #'turns-into 'empty-a)
-(trans 't #'turns-into 'empty-a)
+
+(trans 'empty-b	#'turns-into 'empty)
+(trans 'c 	#'turns-into 'empty)
+(trans 'h	#'turns-into 'empty)
+(trans 'k 	#'turns-into 'empty)
+(trans 'm	#'turns-into 'empty)
+(trans 'p	#'turns-into 'empty)
 
 ;;; the empty state randomly changes into animals
-(trans 'empty-a #'(* 0.1 (turns-into)) 'h)
-(trans 'empty-a #'(* 0.1 (turns-into)) 'k)
-(trans 'empty-a #'(* 0.1 (turns-into)) 'm)
-(trans 'empty-a #'(* 0.1 (turns-into)) 'p)
-(trans 'empty-a #'(* 0.1 (turns-into)) 't)
-(trans 'empty-a #'turns-into 'empty-b)
 
- 
+(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'c)
+(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'h)
+(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'k)
+(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'm)
+(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'p)
+(trans 'empty #'turns-into 'empty-b)
+
+
