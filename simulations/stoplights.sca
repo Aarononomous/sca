@@ -1,13 +1,10 @@
-(title "Stoplights 🚦")
+(title "Stoplights")
 
 (description "Green to yellow to red to green to yellow to.... A teeny tiny simulation to test the modeling code in an obvious way")
 
-;;; Note that I'm using a broken heart here. The unbroken red heart is
-;;; a 6-byte character and the others are 4-byte chars....
-
-(states '((R . (concatenate 'string (string #\esc) "[1;31m*"))
-	  (Y . "+")
-	  (G . "-")))
+(state 'R "*")
+(state 'Y "+")
+(state 'G "O")
 
 ;;; The world is very small and very full of stoplights
 
@@ -22,7 +19,7 @@
                                 (R Y Y Y Y Y Y Y R)
                                 (R R R R R R R R R)))
 
-;;; There are only three rules
+;;; The rules of the road:
 
 (trans 'G #'turns-into 'Y)
 (trans 'Y #'turns-into 'R)
