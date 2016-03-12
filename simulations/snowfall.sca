@@ -4,12 +4,12 @@
 It melts, forming puddles.
 Puddles slowly dissipate in vapor.")
 
-(states '((snow . "❄️")
-	  (wet  . "💦")
-	  (damp . "💧")))
+(states '((snow . "*")
+	  (wet  . ";")
+	  (damp . ".")))
 
 ;;; The world starts out unmarked
-(world :start-proportions (('empty 1))) ; this is the default, as well
+(world :proportions '((empty 1))) ; this is the default, as well
 
 ;;; The transition table is ordered by event
 

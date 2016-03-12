@@ -1,13 +1,13 @@
 (title "Stoplights 🚦")
 
-(description "Green to yellow to red to green to yellow to.... A teeny tiny simulation to test the modeling code in an obvious way; \"obvious ")
+(description "Green to yellow to red to green to yellow to.... A teeny tiny simulation to test the modeling code in an obvious way")
 
 ;;; Note that I'm using a broken heart here. The unbroken red heart is
 ;;; a 6-byte character and the others are 4-byte chars....
 
-(states '((R . "💔")
-	  (Y . "💛")
-	  (G . "💚")))
+(states '((R . (concatenate 'string (string #\esc) "[1;31m*"))
+	  (Y . "+")
+	  (G . "-")))
 
 ;;; The world is very small and very full of stoplights
 
