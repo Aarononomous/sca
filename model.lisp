@@ -130,6 +130,8 @@
 
 (defun state (agent string)
   "Adds (agent . string) to *agents*"
+  ;; TODO: setf-able???
+  ;; (setf (getf *agents* agent) string)
   (nconc *agents* (list agent string)))
 
 (defun trans (current-state transition-probability new-state)

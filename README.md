@@ -155,8 +155,8 @@ neighbor=, neighbor<, etc. return 0 or 1 based on having \<number\> of *state-sy
 *world* ::= (world &rest &optional _start-properties*_ *start-configuration*)  
 This is not required.
 
-*states* ::= (states *state-symbols-a-list*)  
-An association list of the states and the symbols which are displayed for them.
+*states* ::= (state *state-symbol* <string>)  
+A property list of the states and the symbols which are displayed for them. If two symbols are assigned to the same state, the last one will be used.
 
 *state-symbols-a-list* ::= '(_state-symbol_*)  
 *state-symbol* ::= '(\<symbol\> . \<char\>)  

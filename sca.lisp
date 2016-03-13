@@ -24,6 +24,7 @@
 
 ;; Display and animation
 (defparameter *break* nil) ;; break the main loop
+(defparameter *playing* nil) ;; play/pause
 (defparameter *modal* nil) ;; is a modal window on screen?
 (defparameter *action-line* "[P]ause/Play [L]oad file [S]creenshot [I]nformation e[X]it") ; the default prompt line
 (defparameter *speed* 500) ;; milliseconds per frame (minimum)
@@ -58,28 +59,30 @@
   "The main loop updates the screen and checks for input"
   (loop
      named main-loop
-     with time = (get-internal-real-time)
+     with tick = (get-internal-real-time)
      for key = (charms:get-char charms:*standard-window*
 				:ignore-error t)
+     and time = (get-internal-real-time)
      do (progn
-	  (when (> *speed* (- (get-internal-real-time) time))
-	    (update-screen)
-	    (update-model))
+	  ;; Redraw the screen
+	  (charms:clear-window charms:*standard-window* :force-repaint t)
+	  (if *model-loaded*
+	      (print-model))
+	  (if (and *playing*
+		   (< *speed* (- time tick)))
+	      (progn
+		(update-model)
+		(setf tick time)))
+
+	  (display-action-line *action-line*)
+	  (charms:refresh-window charms:*standard-window*)
+
+	  ;; Check for input
 	  (check-keyboard-interrupt key)
 
 	  ;; Exit program
 	  (if *break*
-	      (return-from main-loop))
-	  
-	  (setf time (get-internal-real-time)))))
-
-(defun update-screen ()
-  "Refreshes the screen: clears, redraws any loaded model and the action line."
-  (charms:clear-window charms:*standard-window* :force-repaint t)
-  (if *model-loaded*  
-      (print-model))
-  (display-action-line *action-line*)
-  (charms:refresh-window charms:*standard-window*))
+	      (return-from main-loop)))))
 
 (defun update-model ()
   (if *model-loaded*
@@ -91,13 +94,14 @@
 (defun check-keyboard-interrupt (key)
   "Break out of the loop, temporarily or permanently."
   ;; TODO: make this a case statement, allow for capitals
-  (cond
-    ((eq key #\Escape) (escape-modal))
-    ((eq key #\p) (pause-simulation))
-    ((eq key #\l) (load-simulation))
-    ((eq key #\i) (display-information))
-    ((eq key #\s) (save-screenshot))
-    ((eq key #\x) (exit-program))))
+  (case key
+    ((nil) nil)
+    ((#\Escape) (escape-modal))
+    ((#\p #\P) (pause-simulation))
+    ((#\l #\L) (load-simulation))
+    ((#\i #\I) (display-information))
+    ((#\s #\S) (save-screenshot))
+    ((#\x #\X) (exit-program))))
 
 (defun escape-modal ()
   "Escape from a modal overlay"
@@ -108,7 +112,7 @@
 (defun pause-simulation ()
   "Pauses/unpauses the simulation"
   ;; TODO: this
-  (display-modal "Paused/Unpaused"))
+  (setf *playing* (not *playing*)))
 
 (defun load-simulation ()
   "Loads a new simulation"
@@ -126,10 +130,21 @@
 		      *states* (model:get-states)))
 	      
 	      (if *model-loaded*
-		  (prompt "~A is loaded. Hit return to continue.")
+		  (prompt "~A is loaded. Hit return to continue." file)
 		  (prompt "~A didn't load properly. Hit return to continue." file)))
 	    
 	    (prompt "File ~A not found. Hit return to continue." file))))))
+
+(defun display-information ()
+  "Displays a modal window with the model's information."
+  ;; TODO: this, better
+  (if *model-loaded*
+      (display-modal "~a~%--------~%~A"
+		     (model:get-title)
+		     (model:get-description))
+      (display-modal "~a~%--------~%~A"
+		     "No model loaded"
+		     "")))
 
 (defun save-screenshot ()
   "Saves the model as a string to a file."
@@ -158,23 +173,34 @@
 
     ;; TODO: disable echoing, print entered char to screen, capture backspace,
     ;; add backspace capabilities
-    (charms:enable-echoing)
     (charms:disable-non-blocking-mode charms:*standard-window*)
 
     ;; read line and return it as a string
     (loop 
        named prompt-loop
        for c = (charms:get-char charms:*standard-window*)
-       do (progn
-	    (case c
-	      ((nil) nil)
-	      ;; TODO: backspace ASAP
-	      (#\Newline (return-from prompt-loop))
-	      (otherwise (setf input (append input (list c)))))
-	    ))
+       do (case c
+	    ((nil) nil)
+	    ;; TODO: backspace ASAP
+	    ((#\Rubout) (unless (null input)
+			  (progn
+			    (charms:move-cursor-left
+			     charms:*standard-window*)
+			    (charms:write-char-at-cursor
+			     charms:*standard-window*
+			     #\Space)
+			    (charms:move-cursor-left
+			     charms:*standard-window*)
+			    (setf input (butlast input)))))
+	    ((#\Newline) (return-from prompt-loop))
+	    (otherwise (progn
+			 (charms:write-char-at-cursor
+			  charms:*standard-window*
+			  c)
+			 (setf input
+			       (append input (list c)))))))
     
     ;; reset input mode
-    (charms:disable-echoing)
     (charms:enable-non-blocking-mode charms:*standard-window*)
 
     ;; reset action line
@@ -226,17 +252,6 @@
   "Clears the action line"
   (display-action-line (make-string (1- *width*)
 				    :initial-element #\Space)))
-
-(defun display-information ()
-  "Displays a modal window with the model's information."
-  ;; TODO: this, better
-  (if *model-loaded*
-      (display-modal "~a~%--------~%~A"
-		     (model:get-title)
-		     (model:get-description))
-      (display-modal "~a~%--------~%~A"
-		     "No model loaded"
-		     "")))
 
 (defun get-symbol (state)
   "Return a single printable character for the agent. If the
