@@ -157,23 +157,19 @@ neighbor=, neighbor<, etc. return 0 or 1 based on having \<number\> of *state-sy
 *world* ::= (world &rest &optional _start-properties*_ *start-configuration*)  
 This is not required.
 
-*states* ::= (state *state-symbol* <string>)  
+*states* ::= (state *state* <string>)*  
 A property list of the states and the symbols which are displayed for them. If two symbols are assigned to the same state, the last one will be used.
-
-*state-symbols-a-list* ::= '(_state-symbol_*)  
-*state-symbol* ::= '(\<symbol\> . \<char\>)  
-\<Symbol\> is a regular Lisp symbol. \<char\> is a single character *string*. Yes, string.
 
 *start-properties* ::= *dimensions* | *proportions*
 *dimensions* ::= :dimensions (\<height\> \<width\>)  
 Defaults to (screen-height - 1 x screen-width).
 
-*proportions* ::= :proportions ((*state-symbol* *proportion*)*)  
-A list of states and their overall proportions. When the simulation is created, cells will be randomly assigned to these states. 'empty is allowed. *proportion* is a number between 0 and 1; the sum of all *proportion*'s should be no more than 1.  
-This defaults to all 'empty.
+*proportions* ::= :proportions '((*state* *proportion*)*)  
+A list of states and their overall proportions. When the simulation is created, cells will be randomly assigned to these states. 'empty is allowed. *proportion* is a number between 0 and 1; the sum of all *proportion*'s should be no more than 1, but this isn't enforced.  
+This defaults to all cells set to 'empty.
 
-*start-configuration* ::= :start-config \<string\>  
-A multi-line string.  
+*start-configuration* ::= #2A((*states*...))  
+A 2-D array of starting states. When :start-configuration is set, the other configuration options are ignored.
 
 #### Editors and Terminals
 

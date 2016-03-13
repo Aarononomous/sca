@@ -129,8 +129,14 @@
 	  (setf dimensions (list *height* *width*)))
 	(setf *world* (make-array dimensions
 				  :initial-element 'empty))
-	;; TODO: set initial proportions
-	)))
+	;; set initial proportions
+	(if proportions
+	    (dotimes (row (first dimensions))
+	      (dotimes (col (second dimensions))
+		(setf (aref *world* row col)
+		      (loop for (agent prob) in proportions
+			 when (< (random 1.0) prob)
+			 return agent))))))))
 
 (defun title (new-title)
   "Set the title of the model to the title from the file."

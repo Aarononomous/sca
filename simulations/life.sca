@@ -3,14 +3,18 @@
 (description "John Conway's 1970 Game of Life.
 Rules are:
 For a live cell: If it has fewer than 2 neighbors, it dies of under-population.
-      	     	   If it has more than 3 neighbors, it dies of over-population.
-		   Otherwise, it remains alive.
-For an dead cell: If it has 3 neighbors, it becomes alive."
+      	     	 If it has more than 3 neighbors, it dies of over-population.
+                 Otherwise, it remains alive.
+For an dead cell: If it has 3 neighbors, it becomes alive.")
 
-(trans '⬛    (neighbor< '⬛️ 2) 'empty)
-(trans '⬛    (neighbor> '⬛ 3) 'empty)
-(trans 'empty (neighbor=  '⬛ 3) '⬛)
-;;; If a cell doesn't fall into one of these categories, it remains the same.
+(state live "@")
+(state dead " ")
+
+(trans live (neighbor< 'live 2) dead)
+(trans live (neighbor> 'live 3) dead)
+(trans dead (neighbor= 'live 3) live)
 
 ;;; Set the proportions; the rest of the parameters are defaults
-(world :start-proportions (('⬛ 0.5)))
+;;; Set (dead 1.0) to make sure we fill the world with automata cells
+(world :proportions '((live 0.5)
+		      (dead 1.0))) 
