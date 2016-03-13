@@ -9,8 +9,7 @@ Puddles slowly dissipate in vapor.")
 (state damp ".")
 
 ;;; The world starts out unmarked
-(world :dimensions '(15 15)
-       :proportions '((empty 1))) ; this is the default as well, made explicit
+(world :proportions '((empty 1))) ; this is the default as well, made explicit
 
 ;;; The transition table is ordered by event
 

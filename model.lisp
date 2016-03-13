@@ -24,6 +24,8 @@
 ;;; Parameters
 
 (defparameter *world* nil)
+(defparameter *height* 24)
+(defparameter *width* 40)
 (defparameter *agents* '(empty " ")) ; property list
 (defparameter *transition-table* '(nil))
 (defparameter *title* "No simulation loaded")
@@ -32,7 +34,7 @@
 ;;; Exported functions: information about the model
 ;;; and updating it
 
-(defun load-model (file)
+(defun load-model (file &optional &key height width)
   "Loads the model. This just runs 'file,' so any lisp
    code can be inside. The additional syntax, 'world,'
    'trans,' etc. are macros defined below."
@@ -42,6 +44,8 @@
   (setf *transition-table* '(nil))
   (setf *title* "No simulation loaded")
   (setf *description* "---")
+  (if height (setf *height* height))
+  (if width (setf *width* width))
   ;; load file
   (load file :verbose nil))
 
@@ -106,7 +110,7 @@
 
 ;;; SCA file syntax
 
-(defun world (&optional &key (dimensions '(24 40))
+(defun world (&optional &key dimensions
 			  (proportions '())
 			  (start-configuration '()))
   "Creates a new world:
@@ -121,6 +125,8 @@
       ;; otherwise
       (progn
 	;; set dims
+	(unless dimensions
+	  (setf dimensions (list *height* *width*)))
 	(setf *world* (make-array dimensions
 				  :initial-element 'empty))
 	;; TODO: set initial proportions

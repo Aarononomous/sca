@@ -124,7 +124,9 @@
 	    (progn
 	      ;; if this fails don't blow up, but prompt a message
 	      (ignore-errors
-		(model:load-model file)
+		(model:load-model file
+				  :height (1- *height*)
+				  :width (floor *width* 2))
 		(in-package :sca) ; return to this package
 		(setf *model-loaded* t
 		      *states* (model:get-states)))
