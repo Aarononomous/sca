@@ -136,7 +136,8 @@
 		(setf (aref *world* row col)
 		      (loop for (agent prob) in proportions
 			 when (< (random 1.0) prob)
-			 return agent))))))))
+			 return agent
+			 finally (return 'empty)))))))))
 
 (defun title (new-title)
   "Set the title of the model to the title from the file."

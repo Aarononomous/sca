@@ -28,7 +28,7 @@
 (defparameter *modal* nil) ;; the message in the modal window
 (defparameter *default-prompt* "[P]ause/Play [L]oad file [S]creenshot [I]nformation e[X]it")
 (defparameter *action-line* *default-prompt*)
-(defparameter *speed* 500) ;; milliseconds per frame (minimum)
+(defparameter *speed* 100) ;; milliseconds per frame (minimum)
 
 ;; Model information
 (defparameter *model-loaded* nil)
@@ -120,7 +120,7 @@
   ;; TODO: this
   (if *playing*
       (progn (setf *playing* nil)
-	     (setf *action-line* (red "Paused")))
+	     (setf *action-line* "Paused"))
       (progn (setf *playing* t)
 	     (setf *action-line* *default-prompt*))))
 
