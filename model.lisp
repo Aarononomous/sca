@@ -148,10 +148,10 @@
   "Add this transition to the transition table. Transitions are
    loaded in the order in which they're written."
   `(setf *transition-table*
-	 (acons ',current-state
-		'((lambda () ,transition-probability)
-		  ,new-state)
-		*transition-table*)))
+	 (append *transition-table*
+		 '((,current-state
+		    (lambda () ,transition-probability)
+		    ,new-state)))))
 
 ;;; Neighbor functions
 

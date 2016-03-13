@@ -1,41 +1,34 @@
-;;; test randomness of trans
-
-;; blank -> 0.5 red, 1.0 blank-two (to fill in)
-;; red -> blank
-;; blue -> blank
-
 (title "zoo explosion")
 
-(description "every two generations, spatters the world with random animals.")
+(description "Every two generations, spatters the world with randomly chosen animals.")
 
-(states '((empty   . "  ")
-	  (empty-b . "  ")
-	  (c . "🐮")
-	  (h . "🐹")
-	  (k . "🐨")	  
-	  (m . "🐵")
-	  (p . "🐼")))
+(state b " ") ;; blank!
+(state c "!")
+(state h "¡")
+(state k "‼")	  
+(state m "?")
+(state p "¿")
 
 ;;; the world starts out empty
 
 (world :dimensions '(10 10))
 
-;;; all non-empty states become empty in the next generation
+;;; all non-empty states turn empty in the next generation
 
-(trans 'empty-b	#'turns-into 'empty)
-(trans 'c 	#'turns-into 'empty)
-(trans 'h	#'turns-into 'empty)
-(trans 'k 	#'turns-into 'empty)
-(trans 'm	#'turns-into 'empty)
-(trans 'p	#'turns-into 'empty)
+(trans b (turns-into) empty)
+(trans c (turns-into) empty)
+(trans h (turns-into) empty)
+(trans k (turns-into) empty)
+(trans m (turns-into) empty)
+(trans p (turns-into) empty)
 
 ;;; the empty state randomly changes into animals
 
-(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'c)
-(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'h)
-(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'k)
-(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'm)
-(trans 'empty #'(lambda () (* 0.1 (turns-into))) 'p)
-(trans 'empty #'turns-into 'empty-b)
+(trans empty (* 0.1 (turns-into)) c)
+(trans empty (* 0.1 (turns-into)) h)
+(trans empty (* 0.1 (turns-into)) k)
+(trans empty (* 0.1 (turns-into)) m)
+(trans empty (* 0.1 (turns-into)) p)
+(trans empty (turns-into) b) ; or the special blank
 
 
