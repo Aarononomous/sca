@@ -7,6 +7,8 @@ For a live cell: If it has fewer than 2 neighbors, it dies of under-population.
                  Otherwise, it remains alive.
 For an dead cell: If it has 3 neighbors, it becomes alive.")
 
+(world :dimensions '(100 100))
+
 (state live "@")
 (state dead " ")
 

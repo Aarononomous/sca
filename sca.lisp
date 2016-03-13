@@ -11,7 +11,7 @@
 ;;; Load libraries
 (ql:quickload "cl-charms") ; Curse library
 
-; use colors for reversing the action bar
+					; use colors for reversing the action bar
 (load (merge-pathnames "colors.lisp" *load-truename*))
 (load (merge-pathnames "model.lisp" *load-truename*)) ; Model code
 (use-package :model)
@@ -25,8 +25,9 @@
 ;; Display and animation
 (defparameter *break* nil) ;; break the main loop
 (defparameter *playing* nil) ;; play/pause
-(defparameter *modal* nil) ;; is a modal window on screen?
-(defparameter *action-line* "[P]ause/Play [L]oad file [S]creenshot [I]nformation e[X]it") ; the default prompt line
+(defparameter *modal* nil) ;; the message in the modal window
+(defparameter *default-prompt* "[P]ause/Play [L]oad file [S]creenshot [I]nformation e[X]it")
+(defparameter *action-line* *default-prompt*)
 (defparameter *speed* 500) ;; milliseconds per frame (minimum)
 
 ;; Model information
@@ -43,6 +44,11 @@
     (charms:enable-raw-input :interpret-control-characters t)
     (charms:enable-extra-keys charms:*standard-window*)
     (charms:enable-non-blocking-mode charms:*standard-window*)
+
+    ;; colors - not operational yet
+    ;; (charms/ll:start-color)
+    ;; (charms/ll:init-pair 1 charms/ll:COLOR_BLACK charms/ll:COLOR_WHITE)
+
     ;; clear window
     (charms:clear-window charms:*standard-window*)
     ;; set params
@@ -52,7 +58,6 @@
     (main-loop)
     ;; The simulation's ended - reset display for the next run
     (setf *break* nil
-	  *modal* nil
 	  *generation* 1)))
 
 (defun main-loop ()
@@ -66,19 +71,26 @@
      do (progn
 	  ;; Redraw the screen
 	  (charms:clear-window charms:*standard-window* :force-repaint t)
+	  
 	  (if *model-loaded*
 	      (print-model))
+
+	  (if *modal*
+	      (display-modal *modal*))
+	  
 	  (if (and *playing*
 		   (< *speed* (- time tick)))
 	      (progn
 		(update-model)
 		(setf tick time)))
 
-	  (display-action-line *action-line*)
-	  (charms:refresh-window charms:*standard-window*)
-
 	  ;; Check for input
 	  (check-keyboard-interrupt key)
+
+	  (clear-action-line)
+	  (display-action-line *action-line*)
+	  
+	  (charms:refresh-window charms:*standard-window*)
 
 	  ;; Exit program
 	  (if *break*
@@ -96,23 +108,21 @@
   ;; TODO: make this a case statement, allow for capitals
   (case key
     ((nil) nil)
-    ((#\Escape) (escape-modal))
+    ((#\Escape) (setf *modal* nil)) ; escape the modal window
     ((#\p #\P) (pause-simulation))
     ((#\l #\L) (load-simulation))
     ((#\i #\I) (display-information))
     ((#\s #\S) (save-screenshot))
     ((#\x #\X) (exit-program))))
 
-(defun escape-modal ()
-  "Escape from a modal overlay"
-  ;; TODO: escape from prompt as well?
-  (setf *modal* nil)
-  (remove-modal))
-
 (defun pause-simulation ()
   "Pauses/unpauses the simulation"
   ;; TODO: this
-  (setf *playing* (not *playing*)))
+  (if *playing*
+      (progn (setf *playing* nil)
+	     (setf *action-line* (red "Paused")))
+      (progn (setf *playing* t)
+	     (setf *action-line* *default-prompt*))))
 
 (defun load-simulation ()
   "Loads a new simulation"
@@ -140,25 +150,35 @@
 (defun display-information ()
   "Displays a modal window with the model's information."
   ;; TODO: this, better
-  (if *model-loaded*
-      (display-modal "~a~%--------~%~A"
-		     (model:get-title)
-		     (model:get-description))
-      (display-modal "~a~%--------~%~A"
-		     "No model loaded"
-		     "")))
+  (let ((divider (make-string (1- *width*)
+			      :initial-element #\-)))
+    (setf *modal* (format nil  "~A~%~A~%~A~%~A~%~A"
+			  divider
+			  (model:get-title)
+			  divider
+			  (model:get-description)
+			  divider))))
 
 (defun save-screenshot ()
   "Saves the model as a string to a file."
   ;; TODO: this
-  (display-modal "saving screenshot"))
+  (let ((model (model:get-world))
+	(file (prompt "Filename:")))
+    (with-open-file (filestream
+		     (merge-pathnames file *load-truename*)
+		     :direction :output
+		     :if-exists :rename)
+      (dotimes (row (array-dimension model 0))
+	(dotimes (col (array-dimension model 1))
+	  do (format filestream "~A " (get-symbol (aref model row col))))
+	(format filestream "~%")))))
+
 
 (defun exit-program ()
   "Exits the program by setting the loop break variable to nil"
-  ;; TODO: check to make sure this wasn't a mistake
   (unless (and *model-loaded*
-	      (not (string= (prompt "A model is already loaded. Are you sure you want to exit? yes/no") "yes")))
-   (setf *break* t)))
+	       (not (string= (prompt "A model is already loaded. Are you sure you want to exit? yes/no") "yes")))
+    (setf *break* t)))
 
 ;;; Prompt Input (Another Controller)
 
@@ -220,22 +240,14 @@
 ;;;   input prompts
 ;;; The simulation
 
-(defmacro display-modal (message &rest format-params)
+(defun display-modal (message)
   "Displays the message on the center of the screen. Used by
    display-information, etc."
-  ;; TODO: remove any other modal that may be on screen already
-  ;; TODO: set *modal*
-  `(let ((my-str (format nil ,message ,@format-params)))
-     (charms:write-string-at-point
-      charms:*standard-window*
-      my-str
-      0
-      0)
-     my-str))
-
-(defun remove-modal ()
-  ;; TODO: this
-  )
+  (charms:write-string-at-point
+   charms:*standard-window*
+   message
+   0
+   0))
 
 (defmacro display-action-line (message &rest format-params)
   "Displays the message (the first 40 chars of it) on the action
@@ -264,9 +276,11 @@
 (defun print-model (&optional (stream t))
   "Prints the world to the stream. Used for all output."
   (let ((model (model:get-world)))
-    (dotimes (row (array-dimension model 0))
-      (dotimes (col (array-dimension model 1))
+    (dotimes (row (min (array-dimension model 0)
+		       (1- *height*)))
+      (dotimes (col (min (array-dimension model 1)
+			 (floor *width* 2)))
 	(charms:write-string-at-point charms:*standard-window*
-				    (get-symbol (aref model row col))
-				    (* 2 col)
-				    row)))))
+				      (get-symbol (aref model row col))
+				      (* 2 col)
+				      row)))))

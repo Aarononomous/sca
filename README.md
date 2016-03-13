@@ -22,30 +22,30 @@ This project consists of:
 
 A really wonderful explication of this can be seen (and played with) at [Simulating the World (in Emoji)](http://ncase.me/simulating), and I urge everybody to do so.
 
-To introduce stochastic cellular automata, let’s jump in and  construct a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population in two species of animals, predators and prey --- the cyclic nature develops from the delay between prey population and predation. It can be described with differential equations, but we’ll create another model of this relationship via a different mechanism, cellular automata. There are three states in the model: empty, wolf (🐺), and bunny (🐰).
+To introduce stochastic cellular automata, let’s jump in and  construct a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population in two species of animals, predators and prey --- the cyclic nature develops from the delay between prey population and predation. It can be described with differential equations, but we’ll create another model of this relationship via a different mechanism, cellular automata. There are three states in the model: empty, wolf (W), and bunny (b).
 
 Next, let's devise transition rules for each of these states.
 
 __Empty cells:__
 
 * if more than two neighbors are bunnies (50% of the time) ⟶ become a bunny; __reproduction__  
-	`(trans 'empty (* (neighbor> 2 'bunny) 0.5) 'bunny)`
+	`(trans empty (* (neighbor> 2 'bunny) 0.5) bunny)`
 * if more than two neighbors are wolves (25% of the time) ⟶ become a wolf; __reproduction__  
-	`(trans 'empty (* (neighbor> 2 'wolf) 0.25) 'wolf)`
+	`(trans empty (* (neighbor> 2 'wolf) 0.25) wolf)`
 
 __Bunny cells:__
 
 * if one neighbor is a wolf ⟶ become empty; __predation__  
-	`(trans 'bunny (neighbor= 1 'wolf) 'empty)`
+	`(trans bunny (neighbor= 1 'wolf) empty)`
 * if more than one neighbor is a wolf ⟶ become a wolf; __predation and reproduction__  
-	`(trans 'bunny (neighbor> 1 'wolf) 'wolf)`
+	`(trans 'bunny (neighbor> 1 'wolf) wolf)`
 * if more than three neighbors are bunnies ⟶ become empty; __overconsumption__  
-	`(trans 'bunny (neighbor> 3 'bunny) 'empty)`
+	`(trans bunny (neighbor> 3 'bunny) empty)`
 
 __Wolf cells:__
 
 * if less than one of its neighbors is a bunny ⟶ become empty; __starvation__  
-	`(trans 'wolf (neighbor< 1 'bunny) 'empty)`
+	`(trans wolf (neighbor< 1 'bunny) empty)`
 
 And that's it!
 
@@ -73,7 +73,9 @@ __[P]ause/Play__: Does the obvious thing.
 
 __[L]oad file__: Pauses the simulation and prompts for a simulation file.
    
-__[S]creenshot__: Pauses the simulation and prompts for a file into which the screenshot will be saved. Screenshot files are plaintext.
+__[S]creenshot__: Pauses the simulation and prompts for a filename. Screenshot files are saved as plaintext.
+
+__[I]nformation__: Displays information about the model. Use __[esc]__ to exit this modal.
    
 __e[X]it__: Exits the program.
 
@@ -84,35 +86,36 @@ __e[X]it__: Exits the program.
 Descriptions of models are essentially lists of state transitions. For example, if a water cell becomes an ice cell half the time it’s next to an ice cell and becomes an air cell 1/100 of the time it’s next to more than 3 air cells, the rules are written:
 
 ```
-(trans 'water (* (neighbor 'ice) 0.5)) 'ice)
-(trans 'water (* (neighbor> 'air 3) 0.01) 'air)
+(trans water (* (neighbor 'ice) 0.5)) ice)
+(trans water (* (neighbor> 'air 3) 0.01) air)
 ```
 
-The format of this is `(trans current-state transition-probability new-state)`. Helper functions such as `neighbor` return __1__ or __0__ for true or false conditions, and can be easily integrated into a more complex function.
+The format of this is `(trans current-state transition-probability new-state)`. Helper functions such as `neighbor` return __1__ or __0__ for true or false conditions, and can be easily integrated into a mathematically complex function.
 
-A fractional probability isn’t required, however; for Life, e.g., the transitions would be:
+A fractional probability is not required, however; for Life, e.g., the transitions would be:
 
 ```
-(trans 'full  (neighbor< 'full 2) 'empty)
-(trans 'full  (neighbor> 'full 5) 'empty)
-(trans 'full  turns-into 'full) ;; this isn't necessary when the state doesn't change
-(trans 'empty (neighbor= full 3) 'full)
-(trans 'empty turns-into 'empty) ;; this is also unnecessary, but added for explicitness
+(trans live (neighbor< 'live 2) dead)
+(trans live (neighbor> 'live 3) dead)
+(trans live (turns-into) 		 live) ;; this isn't necessary to write; the state remains unchanged
+
+(trans dead (neighbor= 'live 3) live)
+(trans dead (turns-into) 		 dead) ;; this is also an unnecessary rule added for the sake of explicitness
 ```
 
 The description of the simulation also contains its attributes: its dimensions, the “neighborhood” of a cell (whether diagonal neighbors are included or not), the starting state of the world, etc. For the predator-prey simulation above, we could have:
 
 ```
-(world :height 25
-       :width 40
-       :start-proportions (('wolf 0.10) ('bunny 0.3333)))
+(world :dimensions '(25 40)
+       :proportions (('wolf 0.10)
+       				 ('bunny 0.3333)))
 ```
 
 There are also descriptions of the states in this file, that determine how they'll be displayed. For the same simulation:
 
 ```
-(states '((wolf .  "🐺")
-          (bunny . "🐰")))
+(state wolf  "W")
+(state bunny "b")
 ```
 
 #### File Format
@@ -121,7 +124,7 @@ Please use `.sca` as the extension. These are proper lisp files and can be match
 
 #### A Full BNF Notation
 
-*config* ::= *title* *description* _trans*_ *world*  
+*config* ::= *title* *description* _trans_* *world*  
 The config file contains a title, descriptive information about the simulation, a list of transitions, and configuration info for the "world."
 
 *title* ::= (title \<string\>)  
@@ -164,37 +167,28 @@ A property list of the states and the symbols which are displayed for them. If t
 *dimensions* ::= :dimensions (\<height\> \<width\>)  
 Defaults to (screen-height - 1 x screen-width).
 
-*proportions* ::= :proportions '((*state* *proportion*)*)  
+*proportions* ::= :proportions '((*state-symbol* *proportion*)*)  
 A list of states and their overall proportions. When the simulation is created, cells will be randomly assigned to these states. 'empty is allowed. *proportion* is a number between 0 and 1; the sum of all *proportion*'s should be no more than 1, but this isn't enforced.  
 This defaults to all cells set to 'empty.
 
-*start-configuration* ::= #2A((*states*...))  
+*start-configuration* ::= #2A((_state-symbol_*...))  
 A 2-D array of starting states. When :start-configuration is set, the other configuration options are ignored.
-
-#### Editors and Terminals
-
-Dealing with emoji (and more importantly, other non-ASCII-width characters) is not the strong suit of current fixed-pitched displays (cf. [Adventures in Emoji]()https://ianrenton.com/blog/adventures-in-emoji/), [When monospace fonts aren't](http://denisbider.blogspot.com/2015/09/when-monospace-fonts-arent-unicode.html)).
-
-If you want to use emoji in creating your models (and I recommend you do), it's best to use *only* emoji, or the display will be messed up.
-
-If emoji aren't displaying in your terminal:
-
-* If there's a setting for "Unicode East Asian characters...", make sure it's selected.
-* If you can choose a second font, add one with emoji characters.
-
-If emoji aren't displaying in Emacs:
-
-* add `(set-fontset-font t 'unicode "Apple Color Emoji" nil 'prepend)` to your .emacs file. An excellent alternate font is Symbola.
 
 ## Models
 
-Additional examples are included in the /simulations subdirectory.
+### Included Models
+
+There are additional examples included in the /simulations subdirectory.
 
 [Stoplights](./simulations/stoplights.sca) blinks as its cells switch between red, yellow, and green.
 
 [Snowfall](./simulations/snowfall.sca) is a model of snow melting. It uses three states and nine transitions.
 
 [Life](./simulations/life.sca) is a version of Conway's Game of Life.
+
+[Zoo Explosion](./simulations/zoo-explosion.sca) lobs a random assortment of punctuation marks into the world every other generation.
+
+[Tiny Town](./simulations/tinytown.sca) is an extremely small, extremely motionless simulation. The interesting thing about it is that it contains its own tests. If these don't pass, the file doesn't load.
 
 ### Other Models
 
