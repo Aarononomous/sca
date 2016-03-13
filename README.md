@@ -127,6 +127,8 @@ The config file contains a title, descriptive information about the simulation, 
 *title* ::= (title \<string\>)  
 *description* ::= (description \<string\>)  
 The title and description are just strings.
+*states* ::= (state *state-name* *state-symbol*)  
+The state-symbol should be a single-character string.
 
 ##### Transitions
 
@@ -192,7 +194,7 @@ If emoji aren't displaying in Emacs:
 
 Additional examples are included in the /simulations subdirectory.
 
-[Stoplights 🚦](./simulations/stoplights.sca) blinks as its cells switch between red, yellow, and green.
+[Stoplights](./simulations/stoplights.sca) blinks as its cells switch between red, yellow, and green.
 
 [Snowfall](./simulations/snowfall.sca) is a model of snow melting. It uses three states and nine transitions.
 

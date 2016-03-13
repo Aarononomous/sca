@@ -25,7 +25,7 @@
 
 (defparameter *world* nil)
 (defparameter *agents* '(empty " ")) ; property list
-(defparameter *transition-table* nil)
+(defparameter *transition-table* '(nil))
 (defparameter *title* "No simulation loaded")
 (defparameter *description* "---")
 
@@ -37,6 +37,12 @@
    code can be inside. The additional syntax, 'world,'
    'trans,' etc. are macros defined below."
   (in-package :model) ; use unexported functions
+  ;; reset agents, etc.
+  (setf *agents* '(empty " "))
+  (setf *transition-table* '(nil))
+  (setf *title* "No simulation loaded")
+  (setf *description* "---")
+  ;; load file
   (load file :verbose nil))
 
 (defun get-title ()
@@ -64,7 +70,10 @@
   (let ((world+1 (make-array (array-dimensions *world*))))
     (dotimes (row (array-dimension *world* 0))
       (dotimes (col (array-dimension *world* 1))
-	(setf (aref world+1 row col) (next-state row col))))
+	(let ((cell (aref *world* row col))
+	      (neighbors (get-neighbors *world* row col)))
+	  (setf (aref world+1 row col)
+		(next-state cell neighbors)))))
 
     (setf *world* world+1)))
 
@@ -78,17 +87,14 @@
      when (eq state (first s))
      collect s))
 
-(defun next-state (row col)
+(defun next-state (cell neighbors)
   "The next state of the cell in *world* at row, col."
-  (let ((current-state (aref *world* row col))
-	(neighbors (get-neighbors *world* row col))
-	(transitions (get-transitions (aref *world* row col))))    
+  (let ((transitions (get-transitions cell)))
     (setf *current-neighbors* neighbors)
-    ;; TODO: is there a better way to have the default be the same state?
-    (loop for transition in (append transitions
-				    (list (list current-state #'turns-into current-state)))
+    (loop for transition in transitions
        when (< (random 1.0) (funcall (second transition)))
-       return  (third transition))))
+       return  (third transition)
+       finally (return cell))))
 
 (defun get-neighbors (array row col)
   "A list of the neighbors of the cell at row, col."
@@ -128,18 +134,18 @@
   "Set the model description to the one from the file."
   (setf *description* new-description))
 
-(defun state (agent string)
+(defmacro state (agent string)
   "Adds (agent . string) to *agents*"
-  ;; TODO: setf-able???
-  ;; (setf (getf *agents* agent) string)
-  (nconc *agents* (list agent string)))
+  `(setf (getf *agents* ',agent) ,string))
 
-(defun trans (current-state transition-probability new-state)
+(defmacro trans (current-state transition-probability new-state)
   "Add this transition to the transition table. Transitions are
    loaded in the order in which they're written."
-  (setf *transition-table*
-	(append *transition-table*
-		(list (list current-state transition-probability new-state)))))
+  `(setf *transition-table*
+	 (acons ',current-state
+		'((lambda () ,transition-probability)
+		  ,new-state)
+		*transition-table*)))
 
 ;;; Neighbor functions
 

@@ -4,28 +4,29 @@
 It melts, forming puddles.
 Puddles slowly dissipate in vapor.")
 
-(states '((snow . "*")
-	  (wet  . ";")
-	  (damp . ".")))
+(state snow "*")
+(state wet  ";")
+(state damp ".")
 
 ;;; The world starts out unmarked
-(world :proportions '((empty 1))) ; this is the default, as well
+(world :dimensions '(15 15)
+       :proportions '((empty 1))) ; this is the default as well, made explicit
 
 ;;; The transition table is ordered by event
 
 ;;; Snow falls all across the world
-(trans 'empty #'(* turns-into 0.01) 'snow)
-(trans 'wet   #'(* turns-into 0.01) 'snow)
-(trans 'damp  #'(* turns-into 0.01) 'snow)
+(trans empty (* (turns-into) 0.01) snow)
+(trans wet   (* (turns-into) 0.01) snow)
+(trans damp  (* (turns-into) 0.01) snow)
 
 ;;; It melts...
-(trans 'snow #'(* (neighbor>= 'snow 2) 0.1)  'wet)
-(trans 'snow #'(* (neighbor<  'snow 2) 0.25) 'wet)
+(trans snow (* (neighbor>= 'snow 2) 0.1)  wet)
+(trans snow (* (neighbor<  'snow 2) 0.25) wet)
 
 ;;; Puddles thin...
-(trans 'wet  #'(* (neighbor 'wet)  0.25) 'damp)
-(trans 'wet  #'(* (neighbor 'damp) 0.25) 'damp)
+(trans wet  (* (neighbor 'wet)  0.25) damp)
+(trans wet  (* (neighbor 'damp) 0.25) damp)
 
 ;;; ...then evaporate
-(trans 'damp #'(* (neighbor 'wet)  0)    'empty)
-(trans 'damp #'(* (neighbor 'damp) 0.25) 'empty)
+(trans damp (* (neighbor 'wet)  0.1)  empty)
+(trans damp (* (neighbor 'damp) 0.25) empty)

@@ -2,9 +2,9 @@
 
 (description "Green to yellow to red to green to yellow to.... A teeny tiny simulation to test the modeling code in an obvious way")
 
-(state 'R "*")
-(state 'Y "+")
-(state 'G "O")
+(state R "*")
+(state Y "+")
+(state G "O")
 
 ;;; The world is very small and very full of stoplights
 
@@ -21,6 +21,6 @@
 
 ;;; The rules of the road:
 
-(trans 'G #'turns-into 'Y)
-(trans 'Y #'turns-into 'R)
-(trans 'R #'turns-into 'G)
+(trans G (turns-into) Y)
+(trans Y (turns-into) R)
+(trans R (turns-into) G)
