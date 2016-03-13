@@ -1,0 +1,47 @@
+(title "Predator-Prey, Wolves and Bunnies")
+
+(description "The simulation described in the README. Wolves and bunnies on a great plain battle for survival in a no-holds-barred steel cage simulation royale.
+
+Spoiler: no-one wins.")
+
+;;; States
+
+(state wolf  "W")
+(state bunny "b")
+
+;; EMPTY CELLS:
+
+;; - if more than two neighbors are bunnies (50% of the time)
+;;   ⟶ become a bunny: reproduction
+(trans empty (* (neighbor> 'bunny 2) 0.5) bunny)
+
+;; - if more than two neighbors are wolves (25% of the time)
+;;   ⟶ become a wolf: reproduction
+(trans empty (* (neighbor> 'wolf 2) 0.25) wolf)
+
+
+;; BUNNY CELLS:
+
+;; - if one neighbor is a wolf
+;;   ⟶ become empty: predation
+(trans bunny (neighbor= 'wolf 1) empty)
+
+;; - if more than one neighbor is a wolf
+;;   ⟶ become a wolf: predation and reproduction
+(trans bunny (neighbor> 'wolf 1) wolf)
+
+;; - if more than three neighbors are bunnies
+;;   ⟶ become empty: overconsumption
+(trans bunny (neighbor> 'bunny 3) empty)
+
+;; WOLF CELLS:
+
+;; - if less than one of its neighbors is a bunny
+;;   ⟶ become empty: starvation
+(trans wolf (neighbor< 'bunny 1) empty)
+
+
+;;; The world
+
+(world :proportions '((wolf  0.10)
+		      (bunny 0.33)))
