@@ -1,0 +1,21 @@
+(title "Nicky's Forest")
+
+(description "The forest from Nicky Case's http://ncase.me/simulating/.")
+
+(world :proportions '((tree 0.25)))
+
+(state tree      "♣")
+(state fire      "♨")
+(state lightning "⚡")
+
+;;; Trees grow in the forest
+(trans empty (* (turns-into) 0.003) tree)
+
+;;; But trees sometimes get started on fire
+(trans tree (* (turns-into) 0.0001) fire)
+
+;;; And if their neighbors are burning, they will too
+(trans tree (neighbor 'fire) fire)
+
+;;; Fire leaves nothing behind
+(trans fire (turns-into) empty)
