@@ -9,49 +9,48 @@ We can create and explore sophisticated models of the world with one simple mech
 
 This model is called __cellular automata__. A noteworthy example of this is the Game of Life, invented by John Conway in 1970. From only four rules, powerful and surprising behavior emerges. Even without direct interaction between entities, group organization seems to be present.
 
-The world is haphazard, and by introducing randomness to the state transitions (the “stochastic” part of “stochastic cellular automata”), we add additional subtlety and complexity to our simulations.
-
+Our world is haphazard, and by introducing randomness to the state transitions (the “stochastic” part of “stochastic cellular automata”), we add the same subtlety and complexity to our simulations.
 
 This project consists of:
 
-1. a simulator for running and exploring these models;
-2. a language that describes models; and
+1. a simulator for running and exploring these models,
+2. a language that describes models, and
 3. a bunch of fun models to play with.
 
 ## More
 
 A really wonderful explication of this can be seen (and played with) at [Simulating the World (in Emoji)](http://ncase.me/simulating), and I urge everybody to do so.
 
-To introduce stochastic cellular automata, let’s jump in and  construct a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population in two species of animals, predators and prey --- the cyclic nature develops from the delay between prey population and predation. It can be described with differential equations, but we’ll create another model of this relationship via a different mechanism, cellular automata. There are three states in the model: empty, wolf (W), and bunny (b).
+To introduce stochastic cellular automata, let’s jump in and  construct a simple model. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka–Volterra_equations) describe cyclical changes in population in two species of animals, predators and prey—the cyclic nature develops from the delay between prey population and predation. It can be described with differential equations, but we’ll create another model of this relationship via a different mechanism, cellular automata. There are three states in the model: empty (` `), wolf (`W`), and bunny (`b`).
 
 Next, let's devise transition rules for each of these states.
 
 __Empty cells:__
 
 * if more than two neighbors are bunnies (50% of the time) ⟶ become a bunny; __reproduction__  
-	`(trans empty (* (neighbor> 2 'bunny) 0.5) bunny)`
+	`(trans empty (* (neighbor> 'bunny 2) 0.5) bunny)`
 * if more than two neighbors are wolves (25% of the time) ⟶ become a wolf; __reproduction__  
-	`(trans empty (* (neighbor> 2 'wolf) 0.25) wolf)`
+	`(trans empty (* (neighbor> 'wolf 2) 0.25) wolf)`
 
 __Bunny cells:__
 
 * if one neighbor is a wolf ⟶ become empty; __predation__  
-	`(trans bunny (neighbor= 1 'wolf) empty)`
+	`(trans bunny (neighbor= 'wolf 1) empty)`
 * if more than one neighbor is a wolf ⟶ become a wolf; __predation and reproduction__  
-	`(trans 'bunny (neighbor> 1 'wolf) wolf)`
+	`(trans 'bunny (neighbor> 'wolf 1) wolf)`
 * if more than three neighbors are bunnies ⟶ become empty; __overconsumption__  
-	`(trans bunny (neighbor> 3 'bunny) empty)`
+	`(trans bunny (neighbor> 'bunny 3) empty)`
 
 __Wolf cells:__
 
 * if less than one of its neighbors is a bunny ⟶ become empty; __starvation__  
-	`(trans wolf (neighbor< 1 'bunny) empty)`
+	`(trans wolf (neighbor< 'bunny 1) empty)`
 
 And that's it!
 
 Note that the automata cells are similar, but *not exactly* equivalent to agents. A better metaphor would be to think of them as locations displaying the plurality of their inhabitants.
 
-We then set up the "world" with randomly populated cells, say 1/3 bunny and 1/10 wolf, and begin the simulation. After ten or so generations, patterns begin emerging. Small groups of wolves congregate over five generations, deplete all the bunnies in the surrounding region, and then break off into  “packs” which rove across the world leaving wakes of cleared cells, which then repopulate with bunnies in another dozen generations. From the first random state, then, cyclic populations emerge, while epicyclic waves of population density come and go.
+We set up the world with randomly populated cells, say 1/3 bunny and 1/10 wolf, and begin the simulation. After ten or so generations, patterns begin emerging. Small groups of wolves congregate over five generations, deplete all the bunnies in the surrounding region, and then break off into  “packs” which rove across the world leaving wakes of cleared cells, which then repopulate with bunnies in another dozen generations. From the first random state, then, cyclic populations emerge, while epicyclic waves of population density come and go.
 
 ## Implementation
 
@@ -59,9 +58,18 @@ We then set up the "world" with randomly populated cells, say 1/3 bunny and 1/10
 
 You'll need a few things not included in this repo to get started, unfortunately.
 
-* [SBCL](http://www.sbcl.org) is what I'm using, but any good Common Lisp should work.
-* [Quicklisp](https://www.quicklisp.org/) is a library manager for Lisp, used to install
-* [cl-charms](https://github.com/HiTECNOLOGYs/cl-charms), a curses screen manager. This will be installed automatically the first time the program's run, but Quicklisp has to be installed separately.
+* [Allegro Common Lisp](http://franz.com/products/allegro-common-lisp/) is what I've used in this project, but any good Common Lisp should work.
+* [Quicklisp](https://www.quicklisp.org/) is a library manager for Lisp, used to install...
+* [cl-charms](https://github.com/HiTECNOLOGYs/cl-charms), a curses screen manager. This gets installed automatically the first time the program's run, but Quicklisp has to be installed separately.
+
+Once that's taken care of...
+
+### Quickstart Guide
+
+1. Download or clone this repository
+2. Start up ACL and load this program: `:ld sca`
+3. Run it: `(sca:run)`
+4. The included models are in the "simulations" directory. Hit `L` to load a file, then type in the name of the file to load, such as `simulations/stoplights.sca`.
 
 ### The Simulator
 
@@ -75,13 +83,13 @@ __[L]oad file__: Pauses the simulation and prompts for a simulation file.
    
 __[S]creenshot__: Pauses the simulation and prompts for a filename. Screenshot files are saved as plaintext.
 
-__[I]nformation__: Displays information about the model. Use __[esc]__ to exit this modal.
+__[I]nformation__: Displays information about the model. Hit __[esc]__ to exit this modal.
    
 __e[X]it__: Exits the program.
 
 ### The Model Description Language
 
-#### Quick Introduction
+#### Introduction
 
 Descriptions of models are essentially lists of state transitions. For example, if a water cell becomes an ice cell half the time it’s next to an ice cell and becomes an air cell 1/100 of the time it’s next to more than 3 air cells, the rules are written:
 
@@ -202,3 +210,11 @@ There are additional examples included in the /simulations subdirectory.
 * [Sugarscape](http://groups.engin.umd.umich.edu/CIS/course.des/cis479/projects/*sugarscape/Artificial%20Life%20web.htm)
 * Alan Turing's [Leopards' Spot Problem](http://shell.cas.usf.edu/~stark/leopardsEssay.html)
 * [DaisyWorld](https://en.wikipedia.org/wiki/Daisyworld)
+
+### Making Your Own Models
+
+I've tried to make the model description language as easy as possible, but there are still a few gotchas in there. Here are some tips:
+
+1. Refer to the language description above.
+2. Is something quoted that shouldn't be? Only names of agents in `neighbor` functions need to be quoted.
+3. The loader fails mysteriously if anything in the model program is broken. You can get better debug information by loading `model.lisp` in a REPL, setting `(in-package model)` if you're not automatically placed there, then running `(load-model "path/to/model.sca")`.

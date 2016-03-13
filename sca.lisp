@@ -127,7 +127,7 @@
 (defun load-simulation ()
   "Loads a new simulation"
   (unless (and *model-loaded*
-	       (not (string= (prompt "A model is already loaded. Remove it? yes/no") "yes")))
+	       (not (string= (prompt "A model is already loaded. Remove it? yes/no:") "yes")))
     (progn
       (let ((file (prompt "Filename:")))
        	(if (probe-file file)
@@ -177,7 +177,7 @@
 (defun exit-program ()
   "Exits the program by setting the loop break variable to nil"
   (unless (and *model-loaded*
-	       (not (string= (prompt "A model is already loaded. Are you sure you want to exit? yes/no") "yes")))
+	       (not (string= (prompt "A model is already loaded. Are you sure you want to exit? yes/no:") "yes")))
     (setf *break* t)))
 
 ;;; Prompt Input (Another Controller)
