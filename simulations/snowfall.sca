@@ -4,9 +4,9 @@
 It melts, forming puddles.
 Puddles slowly dissipate in vapor.")
 
-(state snow "*")
-(state wet  ";")
-(state damp ".")
+(state snow "O")
+(state wet  "#")
+(state damp "=")
 
 ;;; The world starts out unmarked
 (world :proportions '((empty 1))) ; this is the default as well, made explicit

@@ -104,8 +104,8 @@
 ;;; Input (Controller)
 
 (defun check-keyboard-interrupt (key)
-  "Break out of the loop, temporarily or permanently."
-  ;; TODO: make this a case statement, allow for capitals
+  "If any of these special keys are hit, leave the loop temporarily
+   and run the subroutine."
   (case key
     ((nil) nil)
     ((#\Escape) (setf *modal* nil)) ; escape the modal window
@@ -117,7 +117,6 @@
 
 (defun pause-simulation ()
   "Pauses/unpauses the simulation"
-  ;; TODO: this
   (if *playing*
       (progn (setf *playing* nil)
 	     (setf *action-line* "Paused"))
@@ -149,7 +148,6 @@
 
 (defun display-information ()
   "Displays a modal window with the model's information."
-  ;; TODO: this, better
   (let ((divider (make-string (1- *width*)
 			      :initial-element #\-)))
     (setf *modal* (format nil  "~A~%~A~%~A~%~A~%~A"
@@ -161,7 +159,6 @@
 
 (defun save-screenshot ()
   "Saves the model as a string to a file."
-  ;; TODO: this
   (let ((model (model:get-world))
 	(file (prompt "Filename:")))
     (with-open-file (filestream
@@ -193,8 +190,6 @@
 			(1+ (length prompt-string))
 			(1- *height*))
 
-    ;; TODO: disable echoing, print entered char to screen, capture backspace,
-    ;; add backspace capabilities
     (charms:disable-non-blocking-mode charms:*standard-window*)
 
     ;; read line and return it as a string
@@ -203,7 +198,6 @@
        for c = (charms:get-char charms:*standard-window*)
        do (case c
 	    ((nil) nil)
-	    ;; TODO: backspace ASAP
 	    ((#\Rubout) (unless (null input)
 			  (progn
 			    (charms:move-cursor-left
@@ -252,8 +246,6 @@
 (defmacro display-action-line (message &rest format-params)
   "Displays the message (the first 40 chars of it) on the action
    bar. Used by prompt, update-screen, etc."
-  ;; TODO: clear action line first
-  ;; TODO: trim to 40 chars? -- determine how many exactly
   `(let ((my-str (format nil ,message ,@format-params)))
      (charms:write-string-at-point
       charms:*standard-window*

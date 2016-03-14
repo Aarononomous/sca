@@ -4,8 +4,8 @@
 
 (world :proportions '((tree 0.25)))
 
-(state tree "♧")
-(state fire "⚡")
+(state tree "T")
+(state fire "*")
 
 ;;; Trees grow in the forest
 (trans empty (* (turns-into) 0.003) tree)
