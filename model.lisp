@@ -31,6 +31,10 @@
 (defparameter *title* "No simulation loaded")
 (defparameter *description* "---")
 
+;;; Globals
+
+(defvar *current-neighbors* nil)
+
 ;;; Exported functions: information about the model
 ;;; and updating it
 

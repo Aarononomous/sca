@@ -37,29 +37,6 @@
 
 ;;; Run the program
 
-(defun run ()
-  "Runs the simulation. The only exported function from sca.lisp."
-  (charms:with-curses ()
-    (charms:disable-echoing)
-    (charms:enable-raw-input :interpret-control-characters t)
-    (charms:enable-extra-keys charms:*standard-window*)
-    (charms:enable-non-blocking-mode charms:*standard-window*)
-
-    ;; colors - not operational yet
-    ;; (charms/ll:start-color)
-    ;; (charms/ll:init-pair 1 charms/ll:COLOR_BLACK charms/ll:COLOR_WHITE)
-
-    ;; clear window
-    (charms:clear-window charms:*standard-window*)
-    ;; set params
-    (setf (values *width* *height*)
-	  (charms:window-dimensions charms:*standard-window*))
-    ;; run the main loop
-    (main-loop)
-    ;; The simulation's ended - reset display for the next run
-    (setf *break* nil
-	  *generation* 1)))
-
 (defun main-loop ()
   "The main loop updates the screen and checks for input"
   (loop
@@ -265,7 +242,7 @@
    return that. If not, return a space (' ')."
   (getf *states* state " "))
 
-(defun print-model (&optional (stream t))
+(defun print-model ()
   "Prints the world to the stream. Used for all output."
   (let ((model (model:get-world)))
     (dotimes (row (min (array-dimension model 0)
@@ -276,3 +253,27 @@
 				      (get-symbol (aref model row col))
 				      (* 2 col)
 				      row)))))
+
+(defun run ()
+  "Runs the simulation. The only exported function from sca.lisp."
+  (charms:with-curses ()
+    (charms:disable-echoing)
+    (charms:enable-raw-input :interpret-control-characters t)
+    (charms:enable-extra-keys charms:*standard-window*)
+    (charms:enable-non-blocking-mode charms:*standard-window*)
+
+    ;; colors - not operational yet
+    ;; (charms/ll:start-color)
+    ;; (charms/ll:init-pair 1 charms/ll:COLOR_BLACK charms/ll:COLOR_WHITE)
+
+    ;; clear window
+    (charms:clear-window charms:*standard-window*)
+    ;; set params
+    (setf (values *width* *height*)
+    (charms:window-dimensions charms:*standard-window*))
+    ;; run the main loop
+    (main-loop)
+    ;; The simulation's ended - reset display for the next run
+    (setf *break* nil
+    *generation* 1)))
+
